@@ -42,6 +42,14 @@ class Entity{
         
         return res;
     }
+    
+    public int getY(){
+    	return y;
+    }
+    
+    public int getX(){
+    	return x;
+    }
 }
 
 class Snaffle extends Entity{
@@ -64,13 +72,15 @@ class Wizard extends Entity{
      * @param snaffles
      * 	List des snaffles sur le terrains.
      */
-    public void doAction(ArrayList<Snaffle> snaffles){
+    public void doAction(ArrayList<Snaffle> snaffles, Area area){
         if(!hasSnaffle){
             Snaffle closest = (Snaffle)getClosestEntity(snaffles);
             move(closest.x, closest.y, 100);
         }
         else{
-            throwSnaffle(Player.AREA_WIDTH, y, 500);
+        	Goal goal = area.getOpponentGoal();
+        	int[] target = goal.getOptimalThrow(this);
+            throwSnaffle(target[0], target[1], 500);
         }
     }
     
@@ -104,19 +114,103 @@ class Wizard extends Entity{
 
 }
 
+
+class Area{
+    
+	public static final int AREA_WIDTH = 16001;
+    public static final int AREA_HEIGHT = 7501;
+    
+    private Goal opponentGoal;
+    private Goal myGoal;
+    
+    public Area(boolean reverse){
+    	Goal goal1 = Goal.generate(0);
+    	Goal goal2 = Goal.generate(1);
+    	
+    	if(!reverse){
+    		myGoal = goal1;
+    		opponentGoal = goal2;
+    	}
+    	else{
+    		myGoal = goal2;
+    		opponentGoal = goal1;
+    	}
+    }
+    
+    public Goal getOpponentGoal(){
+    	return opponentGoal;
+    }
+    
+}
+
+
+class Goal{
+	private int topX;
+	private int topY;
+	private int bottomX;
+	private int bottomY;
+	
+	public static final int DEFAULT_Y = 3750;
+	public static final int DEFAULT_HEIGHT = 4000;
+	
+	public Goal(int topX, int topY, int bottomX, int bottomY){
+		this.topX = topX;
+		this.topY = topY;
+		this.bottomX = bottomX;
+		this.bottomY = bottomY;
+	}
+	
+	public int[] getOptimalThrow(Wizard wizard) {
+		int[] coordinates = new int[2];
+		coordinates[0] = topX;
+		
+		if(wizard.getY() < topY){
+			coordinates[1] = topY;
+		}
+		if(wizard.getY() > bottomY){
+			coordinates[1] = bottomY;
+		}
+		else{
+			coordinates[1] = wizard.getY();
+		}
+		
+		return coordinates;
+	}
+
+	public int getTopY(){
+		return topY;
+	}
+	
+	public int getBottomY(){
+		return bottomY;
+	}
+	
+	public static Goal generate(int id){
+		switch(id){
+			case(0):
+				return new Goal(0,DEFAULT_Y - DEFAULT_Y/2, 0, DEFAULT_Y + DEFAULT_Y/2);
+			case(1):
+				return new Goal(Area.AREA_WIDTH-1,DEFAULT_Y - DEFAULT_Y/2, Area.AREA_WIDTH-1, DEFAULT_Y + DEFAULT_Y/2);
+			default:
+				return null;
+		}
+	}
+	
+}
+
 /**
  * Grab Snaffles and try to throw them through the opponent's goal!
  * Move towards a Snaffle and use your team id to determine where you need to throw it.
  **/
 class Player {
 
-    public static final int AREA_WIDTH = 16001;
-    public static final int AREA_HEIGHT = 7501;
+
 
     public static void main(String args[]) {
         Scanner in = new Scanner(System.in);
         int myTeamId = in.nextInt(); // if 0 you need to score on the right of the map, if 1 you need to score on the left
-
+        
+        Area area = new Area(myTeamId == 1);
         
         // game loop
         while (true) {
@@ -135,7 +229,7 @@ class Player {
                 int state = in.nextInt(); // 1 if the wizard is holding a Snaffle, 0 otherwise
             
                 
-                if(entityType.equals("WIZARDS")){
+                if(entityType.equals("WIZARD")){
                     wizards.add(new Wizard(entityId,x,y,vx,vy,state==1));
                 }
                 else if(entityType.equals("OPPONENT_WIZARD")){
@@ -147,7 +241,7 @@ class Player {
             
             }
             for (int i = 0; i < 2; i++) {
-                wizards.get(i).doAction(snaffles);
+                wizards.get(i).doAction(snaffles, area);
                 //System.out.println("MOVE 8000 3750 100");
             }
         }
