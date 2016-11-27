@@ -11,12 +11,15 @@ class Entity{
     protected int vx = 0;
     protected int vy = 0;
     
-    public Entity(int id, int x, int y, int vx, int vy){
+    protected int radius = 0;
+    
+    public Entity(int id, int x, int y, int vx, int vy, int radius){
         this.id = id;
         this.x = x;
         this.y = y;
         this.vx = vx;
         this.vy = vy;
+        this.radius = radius;
     }
     
     /**
@@ -53,16 +56,18 @@ class Entity{
 }
 
 class Snaffle extends Entity{
-    public Snaffle(int id, int x, int y, int vx, int vy){
-        super(id,x,y,vx,vy);
+	public static final int DEFAULT_RADIUS = 150;
+	
+    public Snaffle(int id, int x, int y, int vx, int vy, int radius){
+        super(id, x, y, vx, vy, radius);
     }
 }
 
 class Wizard extends Entity{
     private boolean hasSnaffle = false;
     
-    public Wizard(int id, int x, int y, int vx, int vy, boolean hasSnaffle){
-        super(id,x,y,vx,vy);
+    public Wizard(int id, int x, int y, int vx, int vy, int radius, boolean hasSnaffle){
+        super(id, x, y, vx, vy, radius);
         this.hasSnaffle = hasSnaffle;
     }
     
@@ -114,6 +119,11 @@ class Wizard extends Entity{
 
 }
 
+class Bludgers extends Entity{
+	public Bludgers(int id, int x, int y, int vx, int vy, int radius){
+		super(id, x, y, vx, vy, radius);
+	}
+}
 
 class Area{
     
@@ -165,10 +175,10 @@ class Goal{
 		coordinates[0] = topX;
 		
 		if(wizard.getY() < topY){
-			coordinates[1] = topY;
+			coordinates[1] = topY + Snaffle.DEFAULT_RADIUS;
 		}
 		if(wizard.getY() > bottomY){
-			coordinates[1] = bottomY;
+			coordinates[1] = bottomY - Snaffle.DEFAULT_RADIUS;
 		}
 		else{
 			coordinates[1] = wizard.getY();
@@ -230,13 +240,13 @@ class Player {
             
                 
                 if(entityType.equals("WIZARD")){
-                    wizards.add(new Wizard(entityId,x,y,vx,vy,state==1));
+                    wizards.add(new Wizard(entityId,x,y,vx,vy,400,state==1));
                 }
                 else if(entityType.equals("OPPONENT_WIZARD")){
-                    opponents.add(new Wizard(entityId,x,y,vx,vy,state==1));
+                    opponents.add(new Wizard(entityId,x,y,vx,vy,400,state==1));
                 }
                 else if(entityType.equals("SNAFFLE")){
-                    snaffles.add(new Snaffle(entityId,x,y,vx,vy));
+                    snaffles.add(new Snaffle(entityId,x,y,vx,vy,150));
                 }
             
             }
